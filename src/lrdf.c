@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 #include <raptor.h>
 #include <ladspa.h>
 #include <time.h>
@@ -723,6 +724,10 @@ lrdf_defaults *lrdf_get_setting_values(const char *uri)
     ret->count = pvcount;
     ret->items = list;
 
+    const char* point = localeconv()->decimal_point;
+    const char* decim = point == '.' ? ',' : '.';
+    char* c;
+
     for (it = portvalues, pvcount = 0; it != NULL;
 	 it = it->next, pvcount++) {
 	/* Find setting's port */
@@ -739,6 +744,9 @@ lrdf_defaults *lrdf_get_setting_values(const char *uri)
 	    port_s.predicate = RDF_BASE "value";
 	    port = lrdf_one_match(&port_s);
 	    if (port != NULL) {
+		if (c = strchr (scale_s->object, decim)) {
+		    *c = point;
+		}
 		list[pvcount].value = atof(port->object);
 	    }
 
@@ -796,6 +804,10 @@ lrdf_defaults *lrdf_get_scale_values(unsigned long id, unsigned long port)
     ret->count = ulist->count;
     ret->items = list;
 
+    const char* point = localeconv()->decimal_point;
+    const char* decim = point == '.' ? ',' : '.';
+    char* c;
+
     for (i=0; i < ulist->count; i++) {
 	list[i].pid = port;
 
@@ -803,6 +815,9 @@ lrdf_defaults *lrdf_get_scale_values(unsigned long id, unsigned long port)
 	scale_p.predicate = RDF_BASE "value";
 	scale_p.object = NULL;
 	scale_s = lrdf_one_match(&scale_p);
+	if (c = strchr (scale_s->object, decim)) {
+	    *c = point;
+	}
 	list[i].value = atof(scale_s->object);
 
 	scale_p.predicate = LADSPA_BASE "hasLabel";
@@ -1314,6 +1329,12 @@ char* lrdf_add_preset(const char *source, const char *label, unsigned long id,
 		 sid++);
 	snprintf(port_uri, 64, "%s.%ld", plugin_uri, vals->items[i].pid);
 	snprintf(value_lit, 64, "%f", vals->items[i].value);
+
+	/* locale hack */
+	char* c;
+	if (c = strchr (value_lit, ',')) {
+	    *c = '.';
+	}
 
 	lrdf_add_triple(source, setting_uri, LADSPA_BASE "hasPortValue",
 			value_uri, lrdf_uri);

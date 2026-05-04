@@ -725,7 +725,7 @@ lrdf_defaults *lrdf_get_setting_values(const char *uri)
     ret->items = list;
 
     const char* point = localeconv()->decimal_point;
-    const char* decim = point == '.' ? ',' : '.';
+    const char decim = (*point == '.') ? ',' : '.';
     char* c;
 
     for (it = portvalues, pvcount = 0; it != NULL;
@@ -744,8 +744,8 @@ lrdf_defaults *lrdf_get_setting_values(const char *uri)
 	    port_s.predicate = RDF_BASE "value";
 	    port = lrdf_one_match(&port_s);
 	    if (port != NULL) {
-		if (c = strchr (scale_s->object, decim)) {
-		    *c = point;
+		if (NULL != (c = strchr (port->object, decim))) {
+		    *c = *point;
 		}
 		list[pvcount].value = atof(port->object);
 	    }
@@ -805,7 +805,7 @@ lrdf_defaults *lrdf_get_scale_values(unsigned long id, unsigned long port)
     ret->items = list;
 
     const char* point = localeconv()->decimal_point;
-    const char* decim = point == '.' ? ',' : '.';
+    const char decim = (*point == '.') ? ',' : '.';
     char* c;
 
     for (i=0; i < ulist->count; i++) {
@@ -815,8 +815,8 @@ lrdf_defaults *lrdf_get_scale_values(unsigned long id, unsigned long port)
 	scale_p.predicate = RDF_BASE "value";
 	scale_p.object = NULL;
 	scale_s = lrdf_one_match(&scale_p);
-	if (c = strchr (scale_s->object, decim)) {
-	    *c = point;
+	if (NULL != (c = strchr (scale_s->object, decim))) {
+	    *c = *point;
 	}
 	list[i].value = atof(scale_s->object);
 
